@@ -1,0 +1,10 @@
+{
+  "name": "CMT admin",
+  "description": "Modern Driver ID Management and Fleet Web Admin Portal for Covai Meter Taxi (CMT).",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
