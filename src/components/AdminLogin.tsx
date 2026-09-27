@@ -3,9 +3,10 @@ import { Lock, LogIn, AlertCircle, Eye, EyeOff } from 'lucide-react';
 
 interface AdminLoginProps {
   onLoginSuccess: () => void;
+  onOpenLegal?: (tab: 'privacy' | 'terms') => void;
 }
 
-export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
+export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess, onOpenLegal }) => {
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
   const [showPin, setShowPin] = useState(false);
@@ -109,11 +110,30 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
           </div>
         </form>
 
-        {/* Subtle Bottom Accent */}
-        <div className="relative z-10 pt-2 pb-1 text-center">
-          <span className="text-[11px] font-medium text-slate-400">
+        {/* Subtle Bottom Accent & Legal Links */}
+        <div className="relative z-10 pt-2 pb-1 text-center space-y-2">
+          <span className="text-[11px] font-medium text-slate-400 block">
             Covai Meter Taxi · Admin Portal
           </span>
+          {onOpenLegal && (
+            <div className="flex items-center justify-center gap-3 text-[11px] font-semibold text-slate-500">
+              <button
+                type="button"
+                onClick={() => onOpenLegal('privacy')}
+                className="hover:text-purple-600 transition cursor-pointer underline-offset-2 hover:underline"
+              >
+                Privacy Policy
+              </button>
+              <span className="text-slate-300">·</span>
+              <button
+                type="button"
+                onClick={() => onOpenLegal('terms')}
+                className="hover:text-purple-600 transition cursor-pointer underline-offset-2 hover:underline"
+              >
+                Terms & Conditions
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

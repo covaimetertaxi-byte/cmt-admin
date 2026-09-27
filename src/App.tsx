@@ -12,6 +12,7 @@ import { DriverModal } from './components/DriverModal';
 import { ResetDeviceModal } from './components/ResetDeviceModal';
 import { DeleteDriverModal } from './components/DeleteDriverModal';
 import { AdminLogin } from './components/AdminLogin';
+import { LegalPage } from './components/LegalPage';
 import { Toast } from './components/Toast';
 import { Driver, DriverStatus, ToastMessage, VehicleCategory } from './types/driver';
 import { Plus } from 'lucide-react';
@@ -58,6 +59,51 @@ function loadInitialDrivers(): Driver[] {
 
 export default function App() {
   const [drivers, setDrivers] = useState<Driver[]>(loadInitialDrivers);
+
+  // Legal / Privacy Policy page state (publicly accessible for Google Play Console)
+  const [legalTab, setLegalTab] = useState<'privacy' | 'terms' | null>(() => {
+    if (typeof window === 'undefined') return null;
+    const params = new URLSearchParams(window.location.search);
+    const page = params.get('page');
+    if (page === 'terms' || window.location.hash === '#terms') return 'terms';
+    if (page === 'privacy' || window.location.hash === '#privacy') return 'privacy';
+    return null;
+  });
+
+  useEffect(() => {
+    const handleUrlChange = () => {
+      const params = new URLSearchParams(window.location.search);
+      const page = params.get('page');
+      if (page === 'terms' || window.location.hash === '#terms') setLegalTab('terms');
+      else if (page === 'privacy' || window.location.hash === '#privacy') setLegalTab('privacy');
+    };
+    window.addEventListener('popstate', handleUrlChange);
+    window.addEventListener('hashchange', handleUrlChange);
+    return () => {
+      window.removeEventListener('popstate', handleUrlChange);
+      window.removeEventListener('hashchange', handleUrlChange);
+    };
+  }, []);
+
+  const handleOpenLegal = (tab: 'privacy' | 'terms') => {
+    setLegalTab(tab);
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('page', tab);
+      url.hash = tab;
+      window.history.pushState({}, '', url.toString());
+    } catch {}
+  };
+
+  const handleCloseLegal = () => {
+    setLegalTab(null);
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('page');
+      url.hash = '';
+      window.history.pushState({}, '', url.pathname);
+    } catch {}
+  };
 
   // Authentication state (checked against VITE_ADMIN_PIN in AdminLogin)
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
@@ -371,14 +417,28 @@ export default function App() {
     }
   };
 
+  if (legalTab) {
+    return (
+      <LegalPage
+        initialTab={legalTab}
+        onBack={handleCloseLegal}
+      />
+    );
+  }
+
   if (!isAuthenticated) {
-    return <AdminLogin onLoginSuccess={() => setIsAuthenticated(true)} />;
+    return (
+      <AdminLogin
+        onLoginSuccess={() => setIsAuthenticated(true)}
+        onOpenLegal={handleOpenLegal}
+      />
+    );
   }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col antialiased selection:bg-purple-100 selection:text-purple-900">
       {/* Top Navbar */}
-      <Navbar onLogout={handleLogout} />
+      <Navbar onLogout={handleLogout} onOpenLegal={handleOpenLegal} />
 
       {/* Main Content */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-20 sm:pb-8">
@@ -395,6 +455,30 @@ export default function App() {
           onAddNew={handleOpenAddModal}
         />
       </main>
+
+      {/* Footer with Legal Links */}
+      <footer className="mt-auto py-5 border-t border-slate-200/80 bg-white/60 text-center text-xs text-slate-500">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p>© {new Date().getFullYear()} Covai Meter Taxi · Admin Portal</p>
+          <div className="flex items-center gap-4 font-semibold text-slate-600">
+            <button
+              type="button"
+              onClick={() => handleOpenLegal('privacy')}
+              className="hover:text-purple-700 transition cursor-pointer"
+            >
+              Privacy Policy
+            </button>
+            <span className="text-slate-300">·</span>
+            <button
+              type="button"
+              onClick={() => handleOpenLegal('terms')}
+              className="hover:text-purple-700 transition cursor-pointer"
+            >
+              Terms & Conditions
+            </button>
+          </div>
+        </div>
+      </footer>
 
       {/* Mobile Floating Action Button (FAB) for seamless 1-hand thumb reach */}
       <div className="sm:hidden fixed bottom-5 right-4 z-40">
