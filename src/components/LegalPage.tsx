@@ -19,6 +19,45 @@ export const LegalPage: React.FC<LegalPageProps> = ({ initialTab = 'privacy' }) 
     }
   }, []);
 
+  // Suppress PWA install prompts, suggestions, and manifest banners on Privacy Policy & Terms page
+  useEffect(() => {
+    const preventInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      return false;
+    };
+
+    window.addEventListener('beforeinstallprompt', preventInstallPrompt, true);
+
+    // Temporarily remove manifest link from document head to prevent browser install suggestions
+    const manifestLinks = Array.from(document.querySelectorAll('link[rel="manifest"]'));
+    const detachedLinks: { link: Element; parent: Node; nextSibling: Node | null }[] = [];
+    manifestLinks.forEach((link) => {
+      if (link.parentNode) {
+        detachedLinks.push({
+          link,
+          parent: link.parentNode,
+          nextSibling: link.nextSibling,
+        });
+        link.parentNode.removeChild(link);
+      }
+    });
+
+    const prevTitle = document.title;
+    document.title =
+      activeTab === 'privacy'
+        ? 'Privacy Policy - Covai Meter Taxi'
+        : 'Terms & Conditions - Covai Meter Taxi';
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', preventInstallPrompt, true);
+      detachedLinks.forEach(({ link, parent, nextSibling }) => {
+        parent.insertBefore(link, nextSibling);
+      });
+      document.title = prevTitle;
+    };
+  }, [activeTab]);
+
   const handleTabChange = (tab: 'privacy' | 'terms') => {
     setActiveTab(tab);
     const url = new URL(window.location.href);

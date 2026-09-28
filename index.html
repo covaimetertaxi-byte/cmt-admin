@@ -25,6 +25,36 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 
+    <!-- Privacy Policy / Terms PWA Install Prompt Blocker for Google Play Console Compliance -->
+    <script>
+      (function() {
+        var isLegalPage = function() {
+          var s = window.location.search || '';
+          var h = window.location.hash || '';
+          return s.indexOf('page=privacy') !== -1 || s.indexOf('page=terms') !== -1 || h.indexOf('privacy') !== -1 || h.indexOf('terms') !== -1;
+        };
+
+        if (isLegalPage()) {
+          // Block Chrome / Android PWA mini-infobar and ambient install banners
+          window.addEventListener('beforeinstallprompt', function(e) {
+            if (e && e.preventDefault) e.preventDefault();
+            if (e && e.stopImmediatePropagation) e.stopImmediatePropagation();
+            return false;
+          }, true);
+
+          // Prevent manifest from suggesting installation on this page
+          document.addEventListener('DOMContentLoaded', function() {
+            var manifests = document.querySelectorAll('link[rel="manifest"]');
+            for (var i = 0; i < manifests.length; i++) {
+              if (manifests[i].parentNode) {
+                manifests[i].parentNode.removeChild(manifests[i]);
+              }
+            }
+          });
+        }
+      })();
+    </script>
+
     <!-- React 19 DevTools, Auto-Refresh Blocker & Cross-Origin Safety Shield -->
     <script>
       (function() {
